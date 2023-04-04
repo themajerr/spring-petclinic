@@ -8,16 +8,22 @@ pipeline {
                 branch 'PR-*'
             }
             steps {
-               sh 'mvn clean package'
+               configFileProvider(
+                [configFile(fileId: 'global-maven-settings', variable: 'MAVEN_SETTINGS')]) {
+                sh 'mvn -s $MAVEN_SETTINGS clean package'
+                }
             }
         }
         stage('Build + upload') {
         // real build, if happy then upload artifact + make docker, dev branch
             when {
-                branch 'springboot3'
+                branch 'main'
             }
             steps {
-               sh 'mvn clean package'
+               configFileProvider(
+                [configFile(fileId: 'global-maven-settings', variable: 'MAVEN_SETTINGS')]) {
+                sh 'mvn -s $MAVEN_SETTINGS clean package'
+                }
             }
         }
         stage('Deploy') {
