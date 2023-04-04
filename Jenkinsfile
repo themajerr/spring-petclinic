@@ -13,8 +13,11 @@ pipeline {
         }
         stage('Build + upload') {
         // real build, if happy then upload artifact + make docker, dev branch
+            when {
+                branch 'springboot3'
+            }
             steps {
-                echo 'Testing..'
+                mvn 'package'
             }
         }
         stage('Deploy') {
