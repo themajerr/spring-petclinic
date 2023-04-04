@@ -8,7 +8,7 @@ pipeline {
                 branch 'PR-*'
             }
             steps {
-               maven 'package'
+               sh 'mvn clean package'
             }
         }
         stage('Build + upload') {
@@ -17,7 +17,7 @@ pipeline {
                 branch 'springboot3'
             }
             steps {
-               maven 'package'
+               sh 'mvn clean package'
             }
         }
         stage('Deploy') {
