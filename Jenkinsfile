@@ -8,13 +8,16 @@ pipeline {
                 branch 'PR-*'
             }
             steps {
-               mvn 'package'
+               sh 'mvn clean package'
             }
         }
         stage('Build + upload') {
         // real build, if happy then upload artifact + make docker, dev branch
+            when {
+                branch 'springboot3'
+            }
             steps {
-                echo 'Testing..'
+               sh 'mvn clean package'
             }
         }
         stage('Deploy') {
