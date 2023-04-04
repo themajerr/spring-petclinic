@@ -8,7 +8,7 @@ pipeline {
                 branch 'PR-*'
             }
             steps {
-               mvn package
+               mvn 'package'
             }
         }
         stage('Build + upload') {
