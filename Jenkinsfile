@@ -24,7 +24,7 @@ pipeline {
                     sh 'mvn -s $MAVEN_SETTINGS -DaltSnapshotDeploymentRepository=nexus_snapshot::http://nexus3-repo:8081/repository/maven_snapshot deploy'
                 }
                 script {
-                    docker.withRegistry("https://0.0.0.0:2239/repository/docker-snapshot-registry/", "nexus") {
+                    docker.withRegistry("https://0.0.0.0:2139/repository/docker-snapshot-registry/", "nexus") {
                         def TAG_SELECTOR = readMavenPom().getVersion()
                         def customImage = docker.build("petclinic:${TAG_SELECTOR}")
                         customImage.push()
