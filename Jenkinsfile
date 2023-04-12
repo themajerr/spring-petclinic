@@ -18,8 +18,9 @@ pipeline {
 
         }
         stage("Build + push artifact + docker image") {
+            when { branch 'springboot3' }
             steps {
-                when { branch 'springboot3' }
+                
                 configFileProvider(
                     [configFile(fileId: 'global-maven-settings', variable: 'MAVEN_SETTINGS')]) {
                     sh 'mvn -s $MAVEN_SETTINGS -DaltSnapshotDeploymentRepository=nexus_snapshot::http://nexus3-repo:8081/repository/maven_snapshot deploy'
