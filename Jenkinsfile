@@ -11,7 +11,7 @@ pipeline {
             steps {
                 configFileProvider(
                     [configFile(fileId: 'global-maven-settings', variable: 'MAVEN_SETTINGS')]) {
-                    sh 'mvn -s $MAVEN_SETTINGS package'
+                    sh 'mvn -s $MAVEN_SETTINGS test'
                 }
             }
 
