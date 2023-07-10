@@ -38,21 +38,19 @@ pipeline {
         stage('Main - create tag') {
             when { branch 'main' }
             steps { 
-                sh 'echo "<create tag>"'
+                sh './gradlew release -Prelease.disableChecks -Prelease.pushTagsOnly'
             }
         }
 
         stage('Main - tag the artifact') {
             when { branch 'main' }
-            steps { 
-                sh 'echo "<tag artifact>"'
+            environment {
+                TAG = sh(script: 'echo "$(./gradlew cV -q -Prelease.quiet)-$(git rev-parse --short HEAD)"', returnStdout: true)
             }
-        }
-
-        stage('Main - push to repo') {
-            when { branch 'main' }
-            steps {
-                sh 'echo "<push>"'
+            steps { 
+                sh '''docker build \
+                -t us-west3-docker.pkg.dev/playground-s-11-5cd45b0d/docker-registry/petclinic:${TAG} .'''
+                sh 'docker push us-west3-docker.pkg.dev/playground-s-11-5cd45b0d/docker-registry/petclinic:${TAG}'
             }
         }
     }
