@@ -25,13 +25,13 @@ pipeline {
 
         stage('PR - Build + Push') {
             when { branch 'PR-*' }
+            environment {
+                TAG = sh(script: 'echo "$(./gradlew cV -q -Prelease.quiet)-$(git rev-parse --short HEAD)"', returnStdout: true)
+            }
             steps { 
-                script {
-                    def git_tag = sh(script: "git tag | tail -1", retutnStdout: true)
-                }
                 sh '''docker build \
-                -t us-west3-docker.pkg.dev/playground-s-11-5cd45b0d/docker-registry/petclinic:$(git tag | tail -1)-$(git rev-parse --short HEAD) .'''
-                sh 'docker push us-west3-docker.pkg.dev/playground-s-11-5cd45b0d/docker-registry/petclinic'
+                -t us-west3-docker.pkg.dev/playground-s-11-5cd45b0d/docker-registry/petclinic:${TAG} .'''
+                sh 'docker push us-west3-docker.pkg.dev/playground-s-11-5cd45b0d/docker-registry/petclinic:${TAG}'
             }
         }
         
