@@ -19,14 +19,14 @@ pipeline {
         stage('PR - Build') {
             when { branch 'PR-*' }
             steps {
-                sh './gradlew clean build'
+                sh './gradlew build'
             }
         }
 
         stage('PR - Build + Push') {
             when { branch 'PR-*' }
             steps { 
-                sh 'docker build -t us-west3-docker.pkg.dev/playground-s-11-5cd45b0d/docker-registry/petclinic:$(git tag | tail -1)-$(git rev-parse --short HEAD)'
+                sh 'docker build -t us-west3-docker.pkg.dev/playground-s-11-5cd45b0d/docker-registry/petclinic:$(git tag | tail -1)-$(git rev-parse --short HEAD) .'
                 sh 'docker push us-west3-docker.pkg.dev/playground-s-11-5cd45b0d/docker-registry/petclinic'
             }
         }
