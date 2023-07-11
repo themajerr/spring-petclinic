@@ -5,6 +5,11 @@ pipeline {
     }
     
     stages {
+        stage('GLOBAL - fetch tags') {
+            steps {
+                sh 'git fetch --tags'
+            }
+        }
         stage('PR - Check') {
             when { branch 'PR-*' }
             steps {
