@@ -177,8 +177,12 @@ resource "google_compute_instance_template" "app_template" {
     network = google_compute_network.app_network.id
     subnetwork = google_compute_subnetwork.app_subnet_1.id
     access_config {
-    }
   }
+  scheduling {
+    preemptible       = true
+  }
+
+}
 # TO BE CHANGED FOR PRODUCTION BUILD JAVA APP
   metadata_startup_script = <<EOF
 #!/bin/bash
