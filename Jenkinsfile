@@ -38,8 +38,8 @@ pipeline {
             }
             steps { 
                 sh '''docker build \
-                -t europe-west1-docker.pkg.dev/gd-gcp-internship-devops/docker-registry/petclinic:${TAG} .'''
-                sh 'docker push europe-west1-docker.pkg.dev/gd-gcp-internship-devops/docker-registry/petclinic:${TAG}'
+                -t europe-west1-docker.pkg.dev/gd-gcp-internship-devops/docker-registry/petclinic-SNAPSHOT:${TAG} .'''
+                sh 'docker push europe-west1-docker.pkg.dev/gd-gcp-internship-devops/docker-registry/petclinic-SNAPSHOT:${TAG}'
             }
         }
 
@@ -60,7 +60,7 @@ pipeline {
         stage('Main - tag the artifact and push to repo') {
             when { branch 'main' }
             environment {
-                TAG = sh(script: 'echo "$(./gradlew cV -q -Prelease.quiet)-$(git rev-parse --short HEAD)"', returnStdout: true)
+                TAG = sh(script: 'echo "$(./gradlew cV -q -Prelease.quiet)"', returnStdout: true)
             }
             steps { 
                 sh '''docker build \
