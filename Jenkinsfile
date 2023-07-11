@@ -38,8 +38,8 @@ pipeline {
             }
             steps { 
                 sh '''docker build \
-                -t europe-west1-docker.pkg.dev/gd-gcp-internship-devops/docker-registry/petclinic-SNAPSHOT:${TAG} .'''
-                sh 'docker push europe-west1-docker.pkg.dev/gd-gcp-internship-devops/docker-registry/petclinic-SNAPSHOT:${TAG}'
+                -t europe-west1-docker.pkg.dev/gd-gcp-internship-devops/docker-registry/petclinic-snapshot:${TAG} .'''
+                sh 'docker push europe-west1-docker.pkg.dev/gd-gcp-internship-devops/docker-registry/petclinic-snapshot:${TAG}'
             }
         }
 
