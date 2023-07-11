@@ -166,6 +166,10 @@ resource "google_compute_instance_template" "app_template" {
   name = "app-template"
 
   machine_type = "e2-small"
+  scheduling {
+      provisioning_model = "SPOT"
+      preemptible       = true
+  }
   tags = ["ssh-access", "java-8080-access"]
   disk {
     source_image = "cos-cloud/cos-stable" # for running docker images, jenkins-agent-sourcedisk should be good for jar file
@@ -178,10 +182,7 @@ resource "google_compute_instance_template" "app_template" {
     subnetwork = google_compute_subnetwork.app_subnet_1.id
     access_config {
   }
-  scheduling {
-    provisioning_model = "SPOT"
-    preemptible       = true
-  }
+  
 
 }
 # TO BE CHANGED FOR PRODUCTION BUILD JAVA APP
