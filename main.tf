@@ -179,6 +179,7 @@ resource "google_compute_instance_template" "app_template" {
     access_config {
   }
   scheduling {
+    provisioning_model = "SPOT"
     preemptible       = true
   }
 
