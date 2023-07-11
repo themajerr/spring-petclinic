@@ -64,7 +64,3 @@ task loadGitHubToken {
     scmVersion.repository.customPassword.set('${System.env.GITHUB_PSW}')
   }
 }
-
-task release {
-    dependsOn loadGitHubToken
-}
