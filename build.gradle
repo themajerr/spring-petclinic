@@ -59,6 +59,6 @@ checkstyle {
 }
 
 task loadGitHubToken << {
-    scmVersion.repository.customUsername.set('${System.env.GITHUB_USER}')
-    scmVersion.repository.customPassword.set('${System.env.GITHUB_PASS}')
+    scmVersion.repository.customUsername.set('${System.env.GITHUB_USR}')
+    scmVersion.repository.customPassword.set('${System.env.GITHUB_PSW}')
 }
