@@ -1,21 +1,21 @@
 variable "google_project" {
   type = string
-  default = "playground-s-11-4ccb10a9"
+  default = "gd-gcp-internship-devops"
 }
 
 variable "service_account_email" {
   type = string
-  default = "cli-service-account-1@playground-s-11-4ccb10a9.iam.gserviceaccount.com"
+  default = "71936227901-compute@developer.gserviceaccount.com"
 }
 
 variable "google_region" {
   type = string
-  default = "us-west3"
+  default = "europe-west1"
 }
 
 variable "google_zone" {
   type = string
-  default = "us-west3-b"
+  default = "europe-west1-b"
 }
 
 variable "app_network_name" {
