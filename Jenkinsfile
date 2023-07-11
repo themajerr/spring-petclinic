@@ -30,8 +30,8 @@ pipeline {
             }
             steps { 
                 sh '''docker build \
-                -t us-west3-docker.pkg.dev/playground-s-11-5cd45b0d/docker-registry/petclinic:${TAG} .'''
-                sh 'docker push us-west3-docker.pkg.dev/playground-s-11-5cd45b0d/docker-registry/petclinic:${TAG}'
+                -t europe-west1-docker.pkg.dev/gd-gcp-internship-devops/docker-registry/petclinic:${TAG} .'''
+                sh 'docker push europe-west1-docker.pkg.dev/gd-gcp-internship-devops/docker-registry/petclinic:${TAG}'
             }
         }
         
@@ -49,8 +49,8 @@ pipeline {
             }
             steps { 
                 sh '''docker build \
-                -t us-west3-docker.pkg.dev/playground-s-11-5cd45b0d/docker-registry/petclinic:${TAG} .'''
-                sh 'docker push us-west3-docker.pkg.dev/playground-s-11-5cd45b0d/docker-registry/petclinic:${TAG}'
+                -t europe-west1-docker.pkg.dev/gd-gcp-internship-devops/docker-registry/petclinic:${TAG} .'''
+                sh 'docker push europe-west1-docker.pkg.dev/gd-gcp-internship-devops/docker-registry/petclinic:${TAG}'
             }
         }
     }
