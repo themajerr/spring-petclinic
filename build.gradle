@@ -58,7 +58,9 @@ checkstyle {
   toolVersion '10.12.0'
 }
 
-task loadGitHubToken << {
+task loadGitHubToken {
+  doLast {
     scmVersion.repository.customUsername.set('${System.env.GITHUB_USR}')
     scmVersion.repository.customPassword.set('${System.env.GITHUB_PSW}')
+  }
 }
