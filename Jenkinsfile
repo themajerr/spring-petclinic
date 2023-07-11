@@ -37,15 +37,22 @@ pipeline {
                 sh 'docker push europe-west1-docker.pkg.dev/gd-gcp-internship-devops/docker-registry/petclinic:${TAG}'
             }
         }
-        
+
         stage('Main - create tag') {
             when { branch 'main' }
             steps { 
-                sh './gradlew release -Prelease.disableChecks -Prelease.pushTagsOnly'
+                sh './gradlew release -Prelease.disableChecks -Prelease.pushTagsOnly -Prelease.customUsername=$GITHUB_USR -Prelease.customPassword=$GITHUB_PSW'
             }
         }
 
-        stage('Main - tag the artifact') {
+        stage('Main - build jar') {
+            when { branch 'main' }
+            steps {
+                sh './gradlew build'
+            }
+        }
+        
+        stage('Main - tag the artifact and push to repo') {
             when { branch 'main' }
             environment {
                 TAG = sh(script: 'echo "$(./gradlew cV -q -Prelease.quiet)-$(git rev-parse --short HEAD)"', returnStdout: true)
