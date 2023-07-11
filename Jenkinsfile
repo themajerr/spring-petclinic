@@ -1,6 +1,9 @@
 pipeline {
     agent any
-
+    environment {
+        GITHUB = credentials('github-pass') 
+    }
+    
     stages {
         stage('PR - Check') {
             when { branch 'PR-*' }
