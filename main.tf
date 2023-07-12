@@ -182,7 +182,7 @@ resource "google_compute_instance_template" "app_template" {
     access_config {}
   }
   metadata = {
-    gce-container-declaration = "spec:\n  containers:\n  - name: instance-2\n    image: europe-west1-docker.pkg.dev/gd-gcp-internship-devops/docker-registry/petclinic:latest\n    args:\n    - ''\n    env:\n    - name: MYSQL_URL\n      value: $${google_sql_database_instance.sql_instance.public_ip_address}\n    - name: MYSQL_USER\n      value: $${google_sql_user.petclinic_db_user.name}\n    - name: MYSQL_PASS\n      value: $${google_sql_user.petclinic_db_user.password}\n    - name: JAVA_OPTS\n      value: -Dspring-boot.run.profiles=mysql\n    stdin: false\n    tty: false\n  restartPolicy: Always\n# This container declaration format is not public API and may change without notice. Please\n# use gcloud command-line tool or Google Cloud Console to run Containers on Google Compute Engine."
+    gce-container-declaration = "spec:\n  containers:\n  - name: instance-2\n    image: europe-west1-docker.pkg.dev/gd-gcp-internship-devops/docker-registry/petclinic:latest\n    args:\n    - ''\n    env:\n    - name: MYSQL_URL\n      value: ${google_sql_database_instance.sql_instance.public_ip_address}\n    - name: MYSQL_USER\n      value: ${google_sql_user.petclinic_db_user.name}\n    - name: MYSQL_PASS\n      value: ${google_sql_user.petclinic_db_user.password}\n    - name: JAVA_OPTS\n      value: -Dspring-boot.run.profiles=mysql\n    stdin: false\n    tty: false\n  restartPolicy: Always\n# This container declaration format is not public API and may change without notice. Please\n# use gcloud command-line tool or Google Cloud Console to run Containers on Google Compute Engine."
   }
   service_account {
     scopes = ["cloud-platform"]
@@ -209,6 +209,7 @@ resource "google_compute_instance_group_manager" "app_managed_group" {
     health_check = google_compute_health_check.app_healthcheck.id
     initial_delay_sec = 3000
   }
+  depends_on = [ google_sql_user.petclinic_db_user ]
 }
 
 output "LB_address" {
