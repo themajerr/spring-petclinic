@@ -19,19 +19,19 @@ resource "google_compute_subnetwork" "app_subnet_1" { # number for potencial sca
 
 
 # PRIVATE SERVICE NETWORK - NEEDED FOR PRIVATE IP ACCESS TO CLOUDSQL INSTANCE 
-resource "google_compute_global_address" "psa_ip_addresses" {
-    name = "psa-ip-addresses"
-    purpose = "VPC_PEERING"
-    address_type = "INTERNAL"
-    prefix_length = "24"
-    network = google_compute_network.app_network.id
-}
+# resource "google_compute_global_address" "psa_ip_addresses" {
+#     name = "psa-ip-addresses"
+#     purpose = "VPC_PEERING"
+#     address_type = "INTERNAL"
+#     prefix_length = "24"
+#     network = google_compute_network.app_network.id
+# }
 
-resource "google_service_networking_connection" "psa_connection" {
-  network = google_compute_network.app_network.id
-  service = "servicenetworking.googleapis.com"
-  reserved_peering_ranges = [ google_compute_global_address.psa_ip_addresses.name ]
-}
+# resource "google_service_networking_connection" "psa_connection" {
+#   network = google_compute_network.app_network.id
+#   service = "servicenetworking.googleapis.com"
+#   reserved_peering_ranges = [ google_compute_global_address.psa_ip_addresses.name ]
+# }
 # FIREWALL
 resource "google_compute_firewall" "ssh_access_app" {
   name    = "ssh-access-app"
@@ -118,9 +118,7 @@ resource "google_sql_database_instance" "sql_instance" {
         zone = var.google_zone
       }
       ip_configuration {
-        ipv4_enabled = false
-        private_network = google_compute_network.app_network.id
-        enable_private_path_for_google_cloud_services = true
+        ipv4_enabled = true
       }
     }
 }
@@ -182,14 +180,12 @@ resource "google_compute_instance_template" "app_template" {
     subnetwork = google_compute_subnetwork.app_subnet_1.id
     access_config {
   }
-  
-
 }
 # TO BE CHANGED FOR PRODUCTION BUILD JAVA APP
   metadata_startup_script = <<EOF
 #!/bin/bash
 
-docker run -p 8080:8080 -e MYSQL_URL=${google_sql_database_instance.sql_instance.private_ip_address} \
+docker run -p 8080:8080 -e MYSQL_URL=${google_sql_database_instance.sql_instance.public_ip_address} \
   -e MYSQL_USER=${google_sql_user.petclinic_db_user.name} -e MYSQL_PASS=${google_sql_user.petclinic_db_user.password} \
   -e JAVA_OPTS='-Dspring-boot.run.profiles=mysql' \
   europe-west1-docker.pkg.dev/gd-gcp-internship-devops/docker-registry/petclinic
