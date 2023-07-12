@@ -192,7 +192,7 @@ resource "google_compute_instance_template" "app_template" {
 docker run -p 8080:8080 -e MYSQL_URL=${google_sql_database_instance.sql_instance.private_ip_address} \
   -e MYSQL_USER=${google_sql_user.petclinic_db_user.name} -e MYSQL_PASS=${google_sql_user.petclinic_db_user.password} \
   -e JAVA_OPTS='-Dspring-boot.run.profiles=mysql' \
-  springcommunity/spring-framework-petclinic
+  europe-west1-docker.pkg.dev/gd-gcp-internship-devops/docker-registry/petclinic
   EOF
 
   service_account {
