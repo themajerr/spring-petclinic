@@ -109,7 +109,7 @@ resource "google_sql_database_instance" "sql_instance" {
     database_version = "MYSQL_8_0"
     region = var.google_region
     deletion_protection = false # in theory you should not do that, so it is for convinience for now | terraform option tbh, not GCP deletion protection
-    depends_on = [ google_service_networking_connection.psa_connection ]
+    
     root_password = "admin" # if in SCM then secret
     settings {
       deletion_protection_enabled = false
