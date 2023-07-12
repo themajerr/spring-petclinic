@@ -183,7 +183,7 @@ resource "google_compute_instance_template" "app_template" {
   network_interface {
     network = google_compute_network.app_network.id
     subnetwork = google_compute_subnetwork.app_subnet_1.id
-    access_config {}
+    #access_config {}
   }
   metadata = {
     gce-container-declaration = "spec:\n  containers:\n  - name: instance-2\n    image: europe-west1-docker.pkg.dev/gd-gcp-internship-devops/docker-registry/petclinic:latest\n    args:\n    - ''\n    env:\n    - name: MYSQL_URL\n      value: jdbc:mysql://${google_sql_database_instance.sql_instance.public_ip_address}/petclinic\n    - name: MYSQL_USER\n      value: ${google_sql_user.petclinic_db_user.name}\n    - name: MYSQL_PASS\n      value: ${google_sql_user.petclinic_db_user.password}\n    - name: SPRING_PROFILES_ACTIVE\n      value: mysql\n    stdin: false\n    tty: false\n  restartPolicy: Always\n# This container declaration format is not public API and may change without notice. Please\n# use gcloud command-line tool or Google Cloud Console to run Containers on Google Compute Engine."
