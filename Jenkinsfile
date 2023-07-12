@@ -66,7 +66,7 @@ pipeline {
                 sh '''docker build \
                 -t europe-west1-docker.pkg.dev/gd-gcp-internship-devops/docker-registry/petclinic:${TAG} \
                 -t europe-west1-docker.pkg.dev/gd-gcp-internship-devops/docker-registry/petclinic:latest .'''
-                sh 'docker push europe-west1-docker.pkg.dev/gd-gcp-internship-devops/docker-registry/petclinic:latest --all-tags'
+                sh 'docker push europe-west1-docker.pkg.dev/gd-gcp-internship-devops/docker-registry/petclinic --all-tags'
             }
         }
     }
