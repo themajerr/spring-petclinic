@@ -179,10 +179,16 @@ resource "google_compute_instance_template" "app_template" {
   network_interface {
     network = google_compute_network.app_network.id
     subnetwork = google_compute_subnetwork.app_subnet_1.id
-    access_config {
+    access_config {}
   }
-}
-# TO BE CHANGED FOR PRODUCTION BUILD JAVA APP
+  metadata_startup_script = <<EOF
+#!/bin/bash
+
+docker run -p 8080:8080 -e MYSQL_URL=${google_sql_database_instance.sql_instance.public_ip_address} \
+  -e MYSQL_USER=${google_sql_user.petclinic_db_user.name} -e MYSQL_PASS=${google_sql_user.petclinic_db_user.password} \
+  -e JAVA_OPTS='-Dspring-boot.run.profiles=mysql' \
+  europe-west1-docker.pkg.dev/gd-gcp-internship-devops/docker-registry/petclinic
+  EOF
 
   service_account {
     email = "service-71936227901@gcp-sa-artifactregistry.iam.gserviceaccount.com"
@@ -198,18 +204,6 @@ resource "google_compute_instance_group_manager" "app_managed_group" {
 
   version {
     instance_template = google_compute_instance_template.app_template.self_link
-  }
-  all_instances_config {
-      metadata = {
-        metadata_startup_script = <<EOF
-#!/bin/bash
-
-docker run -p 8080:8080 -e MYSQL_URL=${google_sql_database_instance.sql_instance.public_ip_address} \
-  -e MYSQL_USER=${google_sql_user.petclinic_db_user.name} -e MYSQL_PASS=${google_sql_user.petclinic_db_user.password} \
-  -e JAVA_OPTS='-Dspring-boot.run.profiles=mysql' \
-  europe-west1-docker.pkg.dev/gd-gcp-internship-devops/docker-registry/petclinic
-  EOF
-      }
   }
 
   named_port {
