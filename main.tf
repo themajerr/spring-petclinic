@@ -187,13 +187,8 @@ resource "google_compute_instance_template" "app_template" {
 docker run -p 8080:8080 -e MYSQL_URL=${google_sql_database_instance.sql_instance.public_ip_address} \
   -e MYSQL_USER=${google_sql_user.petclinic_db_user.name} -e MYSQL_PASS=${google_sql_user.petclinic_db_user.password} \
   -e JAVA_OPTS='-Dspring-boot.run.profiles=mysql' \
-  europe-west1-docker.pkg.dev/gd-gcp-internship-devops/docker-registry/petclinic
+  europe-west1-docker.pkg.dev/gd-gcp-internship-devops/docker-registry/petclinic:latest
   EOF
-
-  service_account {
-    email = "service-71936227901@gcp-sa-artifactregistry.iam.gserviceaccount.com"
-    scopes = ["cloud-platform"] # scopes == all
-  }
 }
 
 
