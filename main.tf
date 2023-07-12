@@ -181,14 +181,9 @@ resource "google_compute_instance_template" "app_template" {
     subnetwork = google_compute_subnetwork.app_subnet_1.id
     access_config {}
   }
-  metadata_startup_script = <<EOF
-#!/bin/bash
-
-docker run -p 8080:8080 -e MYSQL_URL=${google_sql_database_instance.sql_instance.public_ip_address} \
-  -e MYSQL_USER=${google_sql_user.petclinic_db_user.name} -e MYSQL_PASS=${google_sql_user.petclinic_db_user.password} \
-  -e JAVA_OPTS='-Dspring-boot.run.profiles=mysql' \
-  europe-west1-docker.pkg.dev/gd-gcp-internship-devops/docker-registry/petclinic:latest
-  EOF
+  metadata = {
+    gce-container-declaration = "spec:\n  containers:\n  - name: instance-2\n    image: europe-west1-docker.pkg.dev/gd-gcp-internship-devops/docker-registry/petclinic:latest\n    args:\n    - ''\n    env:\n    - name: MYSQL_URL\n      value: $${google_sql_database_instance.sql_instance.public_ip_address}\n    - name: MYSQL_USER\n      value: $${google_sql_user.petclinic_db_user.name}\n    - name: MYSQL_PASS\n      value: $${google_sql_user.petclinic_db_user.password}\n    - name: JAVA_OPTS\n      value: -Dspring-boot.run.profiles=mysql\n    stdin: false\n    tty: false\n  restartPolicy: Always\n# This container declaration format is not public API and may change without notice. Please\n# use gcloud command-line tool or Google Cloud Console to run Containers on Google Compute Engine."
+  }
 }
 
 
