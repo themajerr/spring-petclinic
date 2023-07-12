@@ -193,7 +193,7 @@ docker run -p 8080:8080 -e MYSQL_URL=${google_sql_database_instance.sql_instance
   EOF
 
   service_account {
-    email = var.service_account_email
+    email = service-71936227901@gcp-sa-artifactregistry.iam.gserviceaccount.com
     scopes = ["cloud-platform"] # scopes == all
   }
 }
