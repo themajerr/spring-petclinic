@@ -119,10 +119,7 @@ resource "google_sql_database_instance" "sql_instance" {
       }
       ip_configuration {
         ipv4_enabled = true
-        authorized_networks {
-          name            = google_compute_network.app_network.name
-          value           = google_compute_subnetwork.app_subnet_1.ip_cidr_range
-        }
+       
       }
     }
 }
