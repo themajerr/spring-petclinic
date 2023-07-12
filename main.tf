@@ -119,7 +119,10 @@ resource "google_sql_database_instance" "sql_instance" {
       }
       ip_configuration {
         ipv4_enabled = true
-       
+        authorized_networks {
+          name            = "all just for test"
+          value           = "0.0.0.0/0"
+        }
       }
     }
 }
