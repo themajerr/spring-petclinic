@@ -199,6 +199,18 @@ resource "google_compute_instance_group_manager" "app_managed_group" {
   version {
     instance_template = google_compute_instance_template.app_template.self_link
   }
+  all_instances_config {
+      metadata = {
+        metadata_startup_script = <<EOF
+#!/bin/bash
+
+docker run -p 8080:8080 -e MYSQL_URL=${google_sql_database_instance.sql_instance.public_ip_address} \
+  -e MYSQL_USER=${google_sql_user.petclinic_db_user.name} -e MYSQL_PASS=${google_sql_user.petclinic_db_user.password} \
+  -e JAVA_OPTS='-Dspring-boot.run.profiles=mysql' \
+  europe-west1-docker.pkg.dev/gd-gcp-internship-devops/docker-registry/petclinic
+  EOF
+      }
+  }
 
   named_port {
     name = "http"
@@ -209,18 +221,6 @@ resource "google_compute_instance_group_manager" "app_managed_group" {
   auto_healing_policies {
     health_check = google_compute_health_check.app_healthcheck.id
     initial_delay_sec = 3000
-  }
-  all_instances_config {
-    metadata = {
-      metadata_startup_script = <<EOF
-#!/bin/bash
-
-docker run -p 8080:8080 -e MYSQL_URL=${google_sql_database_instance.sql_instance.public_ip_address} \
-  -e MYSQL_USER=${google_sql_user.petclinic_db_user.name} -e MYSQL_PASS=${google_sql_user.petclinic_db_user.password} \
-  -e JAVA_OPTS='-Dspring-boot.run.profiles=mysql' \
-  europe-west1-docker.pkg.dev/gd-gcp-internship-devops/docker-registry/petclinic
-  EOF
-    }
   }
 }
 
