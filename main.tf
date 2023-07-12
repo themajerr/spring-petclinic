@@ -167,6 +167,7 @@ resource "google_compute_instance_template" "app_template" {
   scheduling {
       provisioning_model = "SPOT"
       preemptible       = true
+      automatic_restart = false
   }
   tags = ["ssh-access", "java-8080-access"]
   disk {
