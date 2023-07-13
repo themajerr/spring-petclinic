@@ -28,7 +28,7 @@ resource "google_compute_router" "app_subnet1_router" {
 }
 
 resource "google_compute_router_nat" "app_nat_router" {
-  name                               = "app_nat_router"
+  name                               = "app-nat-router"
   router                             = google_compute_router.app_subnet1_router.name
   region                             = google_compute_router.app_subnet1_router.region
   nat_ip_allocate_option             = "MANUAL_ONLY"
