@@ -216,6 +216,7 @@ resource "google_compute_instance_template" "app_template" {
 useradd -d /home/worker -m -G docker -s /bin/bash worker
 sudo -u worker bash -c 'docker-credential-gcr configure-docker --registries europe-west1-docker.pkg.dev && \
 docker run \
+-p 8080:8080 \
 -e MYSQL_URL="jdbc:mysql://${google_sql_database_instance.sql_instance.public_ip_address}/petclinic" \
 -e MYSQL_USER=${google_sql_user.petclinic_db_user.name} \
 -e MYSQL_PASS=${google_sql_user.petclinic_db_user.password} \
