@@ -146,7 +146,7 @@ resource "google_sql_database_instance" "sql_instance" {
         ipv4_enabled = true
         authorized_networks {
           name            = "public ip of app_nat"
-          value           = google_compute_address.app_nat_address.self_link
+          value           = google_compute_address.app_nat_address.address
         }
       }
     }
