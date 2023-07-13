@@ -210,9 +210,19 @@ resource "google_compute_instance_template" "app_template" {
     subnetwork = google_compute_subnetwork.app_subnet_1.id
     # access_config {}
   }
-  metadata = {
-    gce-container-declaration = "spec:\n  containers:\n  - name: instance-2\n    image: europe-west1-docker.pkg.dev/gd-gcp-internship-devops/docker-registry/petclinic:latest\n    args:\n    - ''\n    env:\n    - name: MYSQL_URL\n      value: jdbc:mysql://${google_sql_database_instance.sql_instance.public_ip_address}/petclinic\n    - name: MYSQL_USER\n      value: ${google_sql_user.petclinic_db_user.name}\n    - name: MYSQL_PASS\n      value: ${google_sql_user.petclinic_db_user.password}\n    - name: SPRING_PROFILES_ACTIVE\n      value: mysql\n    stdin: false\n    tty: false\n  restartPolicy: Always\n# This container declaration format is not public API and may change without notice. Please\n# use gcloud command-line tool or Google Cloud Console to run Containers on Google Compute Engine."
-  }
+
+  metadata_startup_script = <<EOF
+#!/bin/bash
+useradd -d /home/worker -m -G docker -s /bin/bash worker
+sudo -u worker bash -c 'docker-credential-gcr configure-docker --registries europe-west1-docker.pkg.dev && \
+docker run \
+-e MYSQL_URL="jdbc:mysql://${google_sql_database_instance.sql_instance.public_ip_address}/petclinic" \
+-e MYSQL_USER=${google_sql_user.petclinic_db_user.name} \
+-e MYSQL_PASS=${google_sql_user.petclinic_db_user.password} \
+-e SPRING_PROFILES_ACTIVE=mysql \
+europe-west1-docker.pkg.dev/gd-gcp-internship-devops/docker-registry/petclinic:latest'
+  EOF
+
   service_account {
     scopes = ["cloud-platform"]
   }
