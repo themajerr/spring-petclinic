@@ -16,6 +16,30 @@ resource "google_compute_subnetwork" "app_subnet_1" { # number for potencial sca
   region = var.google_region
   network = google_compute_network.app_network.id
 }
+# NAT FOR APP
+resource "google_compute_address" "app_nat_address" {
+  name = "app-nat-address"
+  region = google_compute_subnetwork.app_subnet_1.region
+}
+resource "google_compute_router" "app_subnet1_router" {
+  name    = "app_subnet1_router"
+  region  = google_compute_subnetwork.app_subnet_1.region
+  network = google_compute_network.app_network.id
+}
+
+resource "google_compute_router_nat" "app_nat_router" {
+  name                               = "app_nat_router"
+  router                             = google_compute_router.app_subnet1_router.name
+  region                             = google_compute_router.app_subnet1_router.region
+  nat_ip_allocate_option             = "MANUAL_ONLY"
+  source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
+  nat_ips = [ google_compute_address.app_nat_address.self_link ]
+
+  log_config {
+    enable = true
+    filter = "ERRORS_ONLY"
+  }
+}
 
 
 # PRIVATE SERVICE NETWORK - NEEDED FOR PRIVATE IP ACCESS TO CLOUDSQL INSTANCE 
@@ -81,6 +105,7 @@ resource "google_compute_global_forwarding_rule" "forwarding_rule" {
   target      = google_compute_target_http_proxy.http_target_proxy.id
   ip_address  = google_compute_global_address.lb_address.id
 }
+
 # HTTP Proxy
  resource "google_compute_target_http_proxy" "http_target_proxy" {
    name = "http-target-proxy"
@@ -120,8 +145,8 @@ resource "google_sql_database_instance" "sql_instance" {
       ip_configuration {
         ipv4_enabled = true
         authorized_networks {
-          name            = "all just for test"
-          value           = "0.0.0.0/0"
+          name            = "public ip of app_nat"
+          value           = google_compute_address.app_nat_address.self_link
         }
       }
     }
@@ -183,7 +208,7 @@ resource "google_compute_instance_template" "app_template" {
   network_interface {
     network = google_compute_network.app_network.id
     subnetwork = google_compute_subnetwork.app_subnet_1.id
-    access_config {}
+    # access_config {}
   }
   metadata = {
     gce-container-declaration = "spec:\n  containers:\n  - name: instance-2\n    image: europe-west1-docker.pkg.dev/gd-gcp-internship-devops/docker-registry/petclinic:latest\n    args:\n    - ''\n    env:\n    - name: MYSQL_URL\n      value: jdbc:mysql://${google_sql_database_instance.sql_instance.public_ip_address}/petclinic\n    - name: MYSQL_USER\n      value: ${google_sql_user.petclinic_db_user.name}\n    - name: MYSQL_PASS\n      value: ${google_sql_user.petclinic_db_user.password}\n    - name: SPRING_PROFILES_ACTIVE\n      value: mysql\n    stdin: false\n    tty: false\n  restartPolicy: Always\n# This container declaration format is not public API and may change without notice. Please\n# use gcloud command-line tool or Google Cloud Console to run Containers on Google Compute Engine."
