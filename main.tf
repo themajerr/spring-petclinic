@@ -22,7 +22,7 @@ resource "google_compute_address" "app_nat_address" {
   region = google_compute_subnetwork.app_subnet_1.region
 }
 resource "google_compute_router" "app_subnet1_router" {
-  name    = "app_subnet1_router"
+  name    = "app-subnet1-router"
   region  = google_compute_subnetwork.app_subnet_1.region
   network = google_compute_network.app_network.id
 }
