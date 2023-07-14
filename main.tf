@@ -9,6 +9,7 @@ resource "google_compute_network" "app_network" {
   name = var.app_network_name
   auto_create_subnetworks = false
 }
+
 # SUBNETWORK
 resource "google_compute_subnetwork" "app_subnet_1" { # number for potencial scaling 
   name = "${var.app_subnet_name}-${var.google_region}"
@@ -17,6 +18,31 @@ resource "google_compute_subnetwork" "app_subnet_1" { # number for potencial sca
   network = google_compute_network.app_network.id
 }
 
+# NAT FOR APP
+resource "google_compute_address" "app_nat_address" {
+  name = "app-nat-address"
+  region = google_compute_subnetwork.app_subnet_1.region
+}
+
+resource "google_compute_router" "app_subnet1_router" {
+  name    = "app-subnet1-router"
+  region  = google_compute_subnetwork.app_subnet_1.region
+  network = google_compute_network.app_network.id
+}
+
+resource "google_compute_router_nat" "app_nat_router" {
+  name                               = "app-nat-router"
+  router                             = google_compute_router.app_subnet1_router.name
+  region                             = google_compute_router.app_subnet1_router.region
+  nat_ip_allocate_option             = "MANUAL_ONLY"
+  source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
+  nat_ips = [ google_compute_address.app_nat_address.self_link ]
+
+  log_config {
+    enable = true
+    filter = "ERRORS_ONLY"
+  }
+}
 
 # PRIVATE SERVICE NETWORK - NEEDED FOR PRIVATE IP ACCESS TO CLOUDSQL INSTANCE 
 # resource "google_compute_global_address" "psa_ip_addresses" {
@@ -32,6 +58,7 @@ resource "google_compute_subnetwork" "app_subnet_1" { # number for potencial sca
 #   service = "servicenetworking.googleapis.com"
 #   reserved_peering_ranges = [ google_compute_global_address.psa_ip_addresses.name ]
 # }
+
 # FIREWALL
 resource "google_compute_firewall" "ssh_access_app" {
   name    = "ssh-access-app"
@@ -65,6 +92,7 @@ resource "google_compute_firewall" "java_8080_access_app" {
   source_ranges = ["0.0.0.0/0"]
   target_tags   = ["java-8080-access"]
 }
+
 # LOAD BALANCER
 # reserve ip address
 resource "google_compute_global_address" "lb_address" {
@@ -81,13 +109,14 @@ resource "google_compute_global_forwarding_rule" "forwarding_rule" {
   target      = google_compute_target_http_proxy.http_target_proxy.id
   ip_address  = google_compute_global_address.lb_address.id
 }
+
 # HTTP Proxy
- resource "google_compute_target_http_proxy" "http_target_proxy" {
+resource "google_compute_target_http_proxy" "http_target_proxy" {
    name = "http-target-proxy"
    url_map = google_compute_url_map.url_map.id
- }
+}
 
- resource "google_compute_url_map" "url_map" {
+resource "google_compute_url_map" "url_map" {
   name            = "url-map"
   default_service = google_compute_backend_service.backend.id
 }
@@ -95,6 +124,7 @@ resource "google_compute_global_forwarding_rule" "forwarding_rule" {
 resource "google_compute_backend_service" "backend" {
   name = "backend-service"
   health_checks = [ google_compute_health_check.app_healthcheck.id ]
+
   backend {
     group = google_compute_instance_group_manager.app_managed_group.instance_group
     balancing_mode  = "UTILIZATION"
@@ -111,17 +141,20 @@ resource "google_sql_database_instance" "sql_instance" {
     deletion_protection = false # in theory you should not do that, so it is for convinience for now | terraform option tbh, not GCP deletion protection
     
     root_password = "admin" # if in SCM then secret
+
     settings {
       deletion_protection_enabled = false
       tier = "db-custom-1-3840"
+
       location_preference {
         zone = var.google_zone
       }
+
       ip_configuration {
         ipv4_enabled = true
         authorized_networks {
-          name            = "all just for test"
-          value           = "0.0.0.0/0"
+          name            = "public ip of app_nat"
+          value           = google_compute_address.app_nat_address.address
         }
       }
     }
@@ -139,7 +172,7 @@ resource "google_sql_user" "petclinic_db_user" {
   instance = google_sql_database_instance.sql_instance.name
   password = "petclinic"
 }
-# INSTANCE
+
 resource "google_compute_health_check" "app_healthcheck" {
   name = "app-health-check"
   check_interval_sec  = 5
@@ -151,7 +184,7 @@ resource "google_compute_health_check" "app_healthcheck" {
     port = "8080"
   }
 }
-# ADD AUTOSCALER
+
 resource "google_compute_autoscaler" "autoscaler" {
   name = "autoscaler-petclinic-app"
   zone = var.google_zone
@@ -166,14 +199,16 @@ resource "google_compute_autoscaler" "autoscaler" {
 
 resource "google_compute_instance_template" "app_template" {
   name = "app-template"
-
   machine_type = "e2-small"
+
   scheduling {
       provisioning_model = "SPOT"
       preemptible       = true
       automatic_restart = false
   }
+
   tags = ["ssh-access", "java-8080-access"]
+
   disk {
     source_image = "cos-cloud/cos-stable" # for running docker images, jenkins-agent-sourcedisk should be good for jar file
     auto_delete = true
@@ -183,11 +218,22 @@ resource "google_compute_instance_template" "app_template" {
   network_interface {
     network = google_compute_network.app_network.id
     subnetwork = google_compute_subnetwork.app_subnet_1.id
-    access_config {}
+    # access_config {}
   }
-  metadata = {
-    gce-container-declaration = "spec:\n  containers:\n  - name: instance-2\n    image: europe-west1-docker.pkg.dev/gd-gcp-internship-devops/docker-registry/petclinic:latest\n    args:\n    - ''\n    env:\n    - name: MYSQL_URL\n      value: jdbc:mysql://${google_sql_database_instance.sql_instance.public_ip_address}/petclinic\n    - name: MYSQL_USER\n      value: ${google_sql_user.petclinic_db_user.name}\n    - name: MYSQL_PASS\n      value: ${google_sql_user.petclinic_db_user.password}\n    - name: SPRING_PROFILES_ACTIVE\n      value: mysql\n    stdin: false\n    tty: false\n  restartPolicy: Always\n# This container declaration format is not public API and may change without notice. Please\n# use gcloud command-line tool or Google Cloud Console to run Containers on Google Compute Engine."
-  }
+
+  metadata_startup_script = <<EOF
+#!/bin/bash
+useradd -d /home/worker -m -G docker -s /bin/bash worker
+sudo -u worker bash -c 'docker-credential-gcr configure-docker --registries europe-west1-docker.pkg.dev && \
+docker run \
+-p 8080:8080 \
+-e MYSQL_URL="jdbc:mysql://${google_sql_database_instance.sql_instance.public_ip_address}/petclinic" \
+-e MYSQL_USER=${google_sql_user.petclinic_db_user.name} \
+-e MYSQL_PASS=${google_sql_user.petclinic_db_user.password} \
+-e SPRING_PROFILES_ACTIVE=mysql \
+europe-west1-docker.pkg.dev/gd-gcp-internship-devops/docker-registry/petclinic:latest'
+  EOF
+
   service_account {
     scopes = ["cloud-platform"]
   }
@@ -207,12 +253,14 @@ resource "google_compute_instance_group_manager" "app_managed_group" {
     name = "http"
     port = 8080
   }
+
   target_size = 1
 
   auto_healing_policies {
     health_check = google_compute_health_check.app_healthcheck.id
     initial_delay_sec = 3000
   }
+
   depends_on = [ google_sql_user.petclinic_db_user ]
 }
 
@@ -221,5 +269,5 @@ output "LB_address" {
 }
 
 output "DB_address" {
-  value = google_sql_database_instance.sql_instance.private_ip_address
+  value = google_sql_database_instance.sql_instance.public_ip_address
 }
