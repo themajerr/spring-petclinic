@@ -9,6 +9,7 @@ resource "google_compute_network" "app_network" {
   name = var.app_network_name
   auto_create_subnetworks = false
 }
+
 # SUBNETWORK
 resource "google_compute_subnetwork" "app_subnet_1" { # number for potencial scaling 
   name = "${var.app_subnet_name}-${var.google_region}"
@@ -16,11 +17,13 @@ resource "google_compute_subnetwork" "app_subnet_1" { # number for potencial sca
   region = var.google_region
   network = google_compute_network.app_network.id
 }
+
 # NAT FOR APP
 resource "google_compute_address" "app_nat_address" {
   name = "app-nat-address"
   region = google_compute_subnetwork.app_subnet_1.region
 }
+
 resource "google_compute_router" "app_subnet1_router" {
   name    = "app-subnet1-router"
   region  = google_compute_subnetwork.app_subnet_1.region
@@ -41,7 +44,6 @@ resource "google_compute_router_nat" "app_nat_router" {
   }
 }
 
-
 # PRIVATE SERVICE NETWORK - NEEDED FOR PRIVATE IP ACCESS TO CLOUDSQL INSTANCE 
 # resource "google_compute_global_address" "psa_ip_addresses" {
 #     name = "psa-ip-addresses"
@@ -56,6 +58,7 @@ resource "google_compute_router_nat" "app_nat_router" {
 #   service = "servicenetworking.googleapis.com"
 #   reserved_peering_ranges = [ google_compute_global_address.psa_ip_addresses.name ]
 # }
+
 # FIREWALL
 resource "google_compute_firewall" "ssh_access_app" {
   name    = "ssh-access-app"
@@ -89,6 +92,7 @@ resource "google_compute_firewall" "java_8080_access_app" {
   source_ranges = ["0.0.0.0/0"]
   target_tags   = ["java-8080-access"]
 }
+
 # LOAD BALANCER
 # reserve ip address
 resource "google_compute_global_address" "lb_address" {
@@ -107,12 +111,12 @@ resource "google_compute_global_forwarding_rule" "forwarding_rule" {
 }
 
 # HTTP Proxy
- resource "google_compute_target_http_proxy" "http_target_proxy" {
+resource "google_compute_target_http_proxy" "http_target_proxy" {
    name = "http-target-proxy"
    url_map = google_compute_url_map.url_map.id
- }
+}
 
- resource "google_compute_url_map" "url_map" {
+resource "google_compute_url_map" "url_map" {
   name            = "url-map"
   default_service = google_compute_backend_service.backend.id
 }
@@ -120,6 +124,7 @@ resource "google_compute_global_forwarding_rule" "forwarding_rule" {
 resource "google_compute_backend_service" "backend" {
   name = "backend-service"
   health_checks = [ google_compute_health_check.app_healthcheck.id ]
+
   backend {
     group = google_compute_instance_group_manager.app_managed_group.instance_group
     balancing_mode  = "UTILIZATION"
@@ -136,12 +141,15 @@ resource "google_sql_database_instance" "sql_instance" {
     deletion_protection = false # in theory you should not do that, so it is for convinience for now | terraform option tbh, not GCP deletion protection
     
     root_password = "admin" # if in SCM then secret
+
     settings {
       deletion_protection_enabled = false
       tier = "db-custom-1-3840"
+
       location_preference {
         zone = var.google_zone
       }
+
       ip_configuration {
         ipv4_enabled = true
         authorized_networks {
@@ -164,7 +172,7 @@ resource "google_sql_user" "petclinic_db_user" {
   instance = google_sql_database_instance.sql_instance.name
   password = "petclinic"
 }
-# INSTANCE
+
 resource "google_compute_health_check" "app_healthcheck" {
   name = "app-health-check"
   check_interval_sec  = 5
@@ -176,7 +184,7 @@ resource "google_compute_health_check" "app_healthcheck" {
     port = "8080"
   }
 }
-# ADD AUTOSCALER
+
 resource "google_compute_autoscaler" "autoscaler" {
   name = "autoscaler-petclinic-app"
   zone = var.google_zone
@@ -191,14 +199,16 @@ resource "google_compute_autoscaler" "autoscaler" {
 
 resource "google_compute_instance_template" "app_template" {
   name = "app-template"
-
   machine_type = "e2-small"
+
   scheduling {
       provisioning_model = "SPOT"
       preemptible       = true
       automatic_restart = false
   }
+
   tags = ["ssh-access", "java-8080-access"]
+
   disk {
     source_image = "cos-cloud/cos-stable" # for running docker images, jenkins-agent-sourcedisk should be good for jar file
     auto_delete = true
@@ -243,12 +253,14 @@ resource "google_compute_instance_group_manager" "app_managed_group" {
     name = "http"
     port = 8080
   }
+
   target_size = 1
 
   auto_healing_policies {
     health_check = google_compute_health_check.app_healthcheck.id
     initial_delay_sec = 3000
   }
+
   depends_on = [ google_sql_user.petclinic_db_user ]
 }
 
@@ -257,5 +269,5 @@ output "LB_address" {
 }
 
 output "DB_address" {
-  value = google_sql_database_instance.sql_instance.private_ip_address
+  value = google_sql_database_instance.sql_instance.public_ip_address
 }
